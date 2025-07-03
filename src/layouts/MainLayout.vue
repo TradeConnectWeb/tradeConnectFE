@@ -1,23 +1,24 @@
 <template>
   <q-layout view="lHh Lpr lFf">
+    <!-- Top Header -->
     <q-header elevated>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn flat dense round icon="menu" @click="toggleLeftDrawer" aria-label="Menu" />
 
-        <q-toolbar-title> Trade Connect </q-toolbar-title>
-
-        <div>TradeConnect {{ $q.version }}</div>
+        <q-toolbar-title> TradeConnect </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
+    <!-- Left Drawer -->
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label header> Essential Links </q-item-label>
 
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+        <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
+    <!-- Main Page Content -->
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -28,7 +29,13 @@
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 
-const linksList = [
+const leftDrawerOpen = ref(false)
+
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+const essentialLinks = [
   {
     title: 'Docs',
     caption: 'quasar.dev',
@@ -36,7 +43,7 @@ const linksList = [
     link: 'https://quasar.dev',
   },
   {
-    title: 'Github',
+    title: 'GitHub',
     caption: 'github.com/quasarframework',
     icon: 'code',
     link: 'https://github.com/quasarframework',
@@ -65,17 +72,5 @@ const linksList = [
     icon: 'public',
     link: 'https://facebook.quasar.dev',
   },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
 ]
-
-const leftDrawerOpen = ref(false)
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
 </script>

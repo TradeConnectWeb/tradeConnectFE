@@ -7,14 +7,17 @@
             <img src="logo.png" alt="TradeConnect Logo" />
           </div>
           <div class="app-title">TradeConnect</div>
-          <div class="description">Your Extra Could Be Someone's Essential, Start Trading!</div>
+          <div class="description">
+            We've sent a gentle little reset link to your inbox. Just follow the steps and you'll be
+            back in soon.
+          </div>
         </div>
       </div>
 
       <div class="right-section">
-        <h2>Login to Your Account</h2>
+        <h2>Forgot Password</h2>
 
-        <q-form @submit.prevent="handleLogin">
+        <q-form @submit.prevent="handleForgotPassword">
           <div class="input-group">
             <q-input
               v-model="email"
@@ -23,111 +26,70 @@
               lazy-rules
               :rules="[
                 (val) => !!val || 'Email is required',
-                isValidEmail || 'Please enter a valid email',
+                (val) => isValidEmail(val) || 'Please enter a valid email',
               ]"
               outlined
               class="q-mb-md"
             />
           </div>
 
-          <div class="input-group">
-            <q-input
-              v-model="password"
-              :type="isPwd ? 'password' : 'text'"
-              label="Password"
-              lazy-rules
-              :rules="[
-                (val) => !!val || 'Password is required',
-                (val) => val.length >= 6 || 'Password must be at least 6 characters',
-              ]"
-              outlined
-              class="q-mb-md"
-            >
-              <template v-slot:append>
-                <q-icon
-                  v-if="password"
-                  :name="isPwd ? 'visibility' : 'visibility_off'"
-                  class="cursor-pointer"
-                  @click="isPwd = !isPwd"
-                />
-              </template>
-            </q-input>
-          </div>
-
-          <div class="remember-forgot q-mb-md">
-            <q-checkbox v-model="rememberMe" label="Remember me" />
-            <q-btn flat label="Forgot password?" class="q-pa-none" to="/forgot-password" />
-          </div>
-
           <q-btn
             type="submit"
-            label="Login"
+            label="Send Email"
             color="primary"
             class="full-width q-mb-md"
             :loading="loading"
           >
             <template v-slot:loading>
               <q-spinner class="on-left" />
-              Logging in...
+              Sending...
             </template>
           </q-btn>
         </q-form>
 
+        <div class="message" :class="{ show: message }">
+          {{ message }}
+        </div>
+
         <div class="login-link">
-          Don't have an account? <q-btn flat label="Sign Up" class="q-pa-none" />
+          <p>Remembered your password?</p>
+          <q-btn flat label="Back to Login" to="/login" class="q-pa-none" />
         </div>
       </div>
     </div>
   </q-page>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 
-export default {
-  setup() {
-    const $q = useQuasar()
+const $q = useQuasar()
+const router = useRouter()
 
-    const email = ref('')
-    const password = ref('')
-    const isPwd = ref(true)
-    const rememberMe = ref(false)
-    const loading = ref(false)
+const email = ref('')
+const loading = ref(false)
+const message = ref('')
 
-    const isValidEmail = computed(() => {
-      return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email.value)
-    })
+function isValidEmail(val) {
+  return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(val)
+}
 
-    const handleLogin = () => {
-      loading.value = true
+function handleForgotPassword() {
+  loading.value = true
+  message.value = ''
 
-      setTimeout(() => {
-        if (email.value === 'tradeconnecta@gmail.com' && password.value === 'admintrade123') {
-          $q.notify({
-            message: 'Login successful!',
-            color: 'positive',
-          })
-        } else {
-          $q.notify({
-            message: 'Invalid email or password',
-            color: 'negative',
-          })
-        }
-        loading.value = false
-      }, 1500)
-    }
+  setTimeout(() => {
+    console.log('Forgot password request for:', email.value)
 
-    return {
-      email,
-      password,
-      isPwd,
-      rememberMe,
-      loading,
-      isValidEmail,
-      handleLogin,
-    }
-  },
+    message.value = '✅ Password reset email sent! (Simulated)'
+    loading.value = false
+
+    setTimeout(() => {
+      message.value = ''
+    }, 5000)
+  }, 1500)
 }
 </script>
 
@@ -164,8 +126,8 @@ export default {
 }
 
 .logo {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   background-color: white;
   border-radius: 50%;
   display: flex;
@@ -205,20 +167,40 @@ export default {
   text-align: center;
   margin-bottom: 30px;
   font-size: 24px;
-  color: #166088;
+  color: var(--secondary);
 }
 
-.remember-forgot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.message {
+  text-align: center;
+  margin-top: 20px;
   font-size: 14px;
+  color: green;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.message.show {
+  opacity: 1;
 }
 
 .login-link {
   text-align: center;
   margin-top: 20px;
   color: #777;
+}
+
+.login-link a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+:root {
+  --primary: #4a6fa5;
+  --secondary: #166088;
 }
 
 @keyframes spinAndScale {
