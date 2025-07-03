@@ -6,8 +6,6 @@
 
         <q-space />
 
-        <search-bar @search="handleSearch" class="header-search text-white" dark />
-
         <q-space />
 
         <div class="header-icons row items-center no-wrap">

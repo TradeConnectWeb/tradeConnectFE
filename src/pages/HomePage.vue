@@ -1,5 +1,20 @@
 <template>
   <q-page class="home-page">
+    <div class="q-pa-md">
+      <q-input
+        v-model="searchQuery"
+        placeholder="Search products..."
+        outlined
+        dense
+        bg-color="white"
+        @keyup.enter="handleSearch(searchQuery)"
+      >
+        <template v-slot:append>
+          <q-icon name="search" @click="handleSearch(searchQuery)" class="cursor-pointer" />
+        </template>
+      </q-input>
+    </div>
+
     <q-btn
       round
       color="primary"
@@ -9,67 +24,9 @@
       @click="showAddPostModal = true"
     />
 
-    <div class="categories-section q-px-md q-pt-md">
-      <h2 class="text-h5 text-weight-bold q-mb-md">Browse Categories</h2>
-      <div class="categories-scroll">
-        <div class="category active" @click="navigateToCategory('all')">
-          <q-icon name="apps" class="q-mr-sm" />
-          All Items
-        </div>
-        <div class="category" @click="navigateToCategory('fashion')">
-          <q-icon name="checkroom" class="q-mr-sm" />
-          Fashion & Apparel
-        </div>
-        <div class="category" @click="navigateToCategory('electronics')">
-          <q-icon name="devices" class="q-mr-sm" />
-          Electronics
-        </div>
-        <div class="category" @click="navigateToCategory('food')">
-          <q-icon name="restaurant" class="q-mr-sm" />
-          Food & Beverages
-        </div>
-        <div class="category" @click="navigateToCategory('diy')">
-          <q-icon name="handyman" class="q-mr-sm" />
-          DIY & Hardware
-        </div>
-        <div class="category" @click="navigateToCategory('health')">
-          <q-icon name="spa" class="q-mr-sm" />
-          Health & Beauty
-        </div>
-      </div>
-    </div>
+    <q-space />
 
-    <div class="popular-categories q-pa-md">
-      <h2 class="text-h5 text-weight-bold q-mb-md">Popular Categories</h2>
-      <div class="row q-col-gutter-md">
-        <div v-for="category in popularCategories" :key="category.id" class="col-12 col-sm-6">
-          <q-card
-            flat
-            bordered
-            class="popular-category-card cursor-pointer"
-            @click="navigateToCategory(category.id)"
-          >
-            <div class="row items-center no-wrap q-pa-sm">
-              <div class="col-auto">
-                <q-avatar
-                  :icon="category.icon"
-                  size="md"
-                  :color="category.color"
-                  text-color="white"
-                />
-              </div>
-              <div class="col">
-                <div class="text-subtitle1 text-weight-medium">{{ category.name }}</div>
-                <div class="text-caption text-grey-7">{{ category.count }} products</div>
-              </div>
-              <div class="col-auto">
-                <q-icon name="chevron_right" size="sm" />
-              </div>
-            </div>
-          </q-card>
-        </div>
-      </div>
-    </div>
+    <q-space />
 
     <div class="featured-products q-pa-md">
       <div class="row items-center justify-between q-mb-md">
@@ -336,6 +293,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
+const searchQuery = ref('')
 const $q = useQuasar()
 const router = useRouter()
 
@@ -361,76 +319,36 @@ const categories = [
 const featuredProducts = ref([
   {
     id: 1,
-    title: 'Wireless Headphones with Noise Cancellation',
+    title: '',
     price: 0,
-    image: 'https://placehold.co/300x300?text=Headphones',
-    location: 'zone1',
-    isFavorite: false,
-    isForSale: true,
-  },
-  {
-    id: 2,
-    title: 'Genuine Leather Jacket (Medium)',
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Jacket',
-    location: 'zone3',
-    isFavorite: false,
-    isForSale: true,
-  },
-  {
-    id: 3,
-    title: 'Modern Coffee Table',
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Table',
-    location: 'zone11',
-    isFavorite: false,
-    isForSale: false,
-  },
-  {
-    id: 4,
-    title: 'Smartphone with Free Case',
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Phone',
-    location: 'zone8',
+    image: '',
+    location: '',
     isFavorite: false,
     isForSale: true,
   },
 ])
 
+const originalFeatured = ref([...featuredProducts.value])
+const handleSearch = () => {
+  const query = searchQuery.value.trim()
+
+  if (!query) {
+    featuredProducts.value = [...originalFeatured.value]
+    return
+  }
+
+  featuredProducts.value = originalFeatured.value.filter((product) =>
+    product.title.toLowerCase().includes(query.toLowerCase()),
+  )
+}
+
 const recentProducts = ref([
   {
     id: 5,
-    title: 'Camera Lens 50mm Prime for DSLR',
+    title: '',
     price: 0,
-    image: 'https://placehold.co/300x300?text=Lens',
-    location: 'zone10',
-    isFavorite: false,
-    isForSale: true,
-  },
-  {
-    id: 6,
-    title: 'Running Shoes Size 9  Brand New',
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Shoes',
-    location: 'zone3',
-    isFavorite: false,
-    isForSale: false,
-  },
-  {
-    id: 7,
-    title: 'Shelf Bookcase Easy Assembly',
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Bookshelf',
-    location: 'zone2',
-    isFavorite: false,
-    isForSale: true,
-  },
-  {
-    id: 8,
-    title: "Men's Analog Watch - Silver",
-    price: 0,
-    image: 'https://placehold.co/300x300?text=Watch',
-    location: 'zone1',
+    image: '',
+    location: '',
     isFavorite: false,
     isForSale: true,
   },
