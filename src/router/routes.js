@@ -1,9 +1,8 @@
 const routes = [
   {
-    path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    path: '/blank',
+    component: () => import('layouts/BlankLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/HomePage.vue') },
       { path: 'login', component: () => import('pages/loginPage.vue') },
       { path: 'signup', component: () => import('pages/signupPage.vue') },
       { path: 'forgot-password', component: () => import('pages/ForgotPasswordPage.vue') },
@@ -11,8 +10,8 @@ const routes = [
   },
 
   {
-    path: '/home',
-    component: () => import('layouts/HomeLayout.vue'),
+    path: '/',
+    component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/HomePage.vue') },
       { path: 'messages', component: () => import('pages/MessagesPage.vue') },
