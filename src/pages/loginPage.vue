@@ -1,6 +1,7 @@
 <template>
   <q-page class="flex flex-center bg-grey-2">
     <div class="container">
+      <!-- Left Section -->
       <div class="left-section">
         <div class="logo-container">
           <div class="logo">
@@ -11,48 +12,45 @@
         </div>
       </div>
 
+      <!-- Right Section -->
       <div class="right-section">
         <h2>Login to Your Account</h2>
 
         <q-form @submit.prevent="handleLogin">
-          <div class="input-group">
-            <q-input
-              v-model="email"
-              type="email"
-              label="Email"
-              lazy-rules
-              :rules="[
-                (val) => !!val || 'Email is required',
-                isValidEmail || 'Please enter a valid email',
-              ]"
-              outlined
-              class="q-mb-md"
-            />
-          </div>
+          <q-input
+            v-model="email"
+            type="email"
+            label="Email"
+            lazy-rules
+            outlined
+            class="q-mb-md"
+            :rules="[
+              (val) => !!val || 'Email is required',
+              () => isValidEmail || 'Please enter a valid email',
+            ]"
+          />
 
-          <div class="input-group">
-            <q-input
-              v-model="password"
-              :type="isPwd ? 'password' : 'text'"
-              label="Password"
-              lazy-rules
-              :rules="[
-                (val) => !!val || 'Password is required',
-                (val) => val.length >= 6 || 'Password must be at least 6 characters',
-              ]"
-              outlined
-              class="q-mb-md"
-            >
-              <template v-slot:append>
-                <q-icon
-                  v-if="password"
-                  :name="isPwd ? 'visibility' : 'visibility_off'"
-                  class="cursor-pointer"
-                  @click="isPwd = !isPwd"
-                />
-              </template>
-            </q-input>
-          </div>
+          <q-input
+            v-model="password"
+            :type="isPwd ? 'password' : 'text'"
+            label="Password"
+            lazy-rules
+            outlined
+            class="q-mb-md"
+            :rules="[
+              (val) => !!val || 'Password is required',
+              (val) => val.length >= 6 || 'Password must be at least 6 characters',
+            ]"
+          >
+            <template v-slot:append>
+              <q-icon
+                v-if="password"
+                :name="isPwd ? 'visibility' : 'visibility_off'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
 
           <div class="remember-forgot q-mb-md">
             <q-checkbox v-model="rememberMe" label="Remember me" />
@@ -81,57 +79,69 @@
   </q-page>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
 
-export default {
-  setup() {
-    const $q = useQuasar()
+const router = useRouter()
+const $q = useQuasar()
 
-    const email = ref('')
-    const password = ref('')
-    const isPwd = ref(true)
-    const rememberMe = ref(false)
-    const loading = ref(false)
+const email = ref('')
+const password = ref('')
+const isPwd = ref(true)
+const rememberMe = ref(false)
+const loading = ref(false)
 
-    const isValidEmail = computed(() => {
-      return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email.value)
+const isValidEmail = computed(() => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email.value))
+
+const handleLogin = async () => {
+  if (!isValidEmail.value) {
+    $q.notify({ message: 'Invalid email format', color: 'negative' })
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await axios.post(`${process.env.api_host}/users/loginUser`, {
+      email: email.value,
+      password: password.value,
     })
 
-    const handleLogin = () => {
-      loading.value = true
+    $q.notify({
+      message: response.data.message || 'Login successful!',
+      color: 'positive',
+    })
 
-      setTimeout(() => {
-        if (email.value === 'tradeconnecta@gmail.com' && password.value === 'admintrade123') {
-          $q.notify({
-            message: 'Login successful!',
-            color: 'positive',
-          })
-        } else {
-          $q.notify({
-            message: 'Invalid email or password',
-            color: 'negative',
-          })
-        }
-        loading.value = false
-      }, 1500)
-    }
-
-    return {
-      email,
-      password,
-      isPwd,
-      rememberMe,
-      loading,
-      isValidEmail,
-      handleLogin,
-    }
-  },
+    const token = response.data.token
+    localStorage.setItem('authToken', 'bearer ' + token)
+    // Redirect or change UI (optional)
+    // router.push('/dashboard')
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Login failed'
+    $q.notify({ message: msg, color: 'negative' })
+  } finally {
+    loading.value = false
+    checkAuth()
+  }
 }
+
+async function checkAuth() {
+  const token = localStorage.getItem('authToken')
+  if (token) {
+    router.push('/')
+  }
+}
+
+onMounted(() => {
+  checkAuth()
+})
 </script>
 
 <style lang="scss" scoped>
+/* Existing styles stay unchanged */
 .container {
   display: flex;
   max-width: 800px;

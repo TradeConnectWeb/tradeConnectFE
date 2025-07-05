@@ -9,7 +9,7 @@
           <div>
             <div class="text-h6">{{ userData.username || 'User' }}</div>
             <div>{{ userData.email }}</div>
-            <div>{{ userData.zone }}</div>
+            <div>{{ userData.address }}</div>
           </div>
           <q-space />
           <q-btn flat icon="edit" @click="showEditProfile = true" label="Edit Profile" />
@@ -93,13 +93,13 @@
         </q-card-section>
         <q-card-section>
           <q-form @submit.prevent="saveProfile">
-            <q-input v-model="editableUser.username" label="Username" required />
-            <q-input v-model="editableUser.email" label="Email" type="email" required />
-            <q-input v-model="editableUser.firstName" label="First Name" />
-            <q-input v-model="editableUser.lastName" label="Last Name" />
-            <q-input v-model="editableUser.phone" label="Phone" />
-            <q-input v-model="editableUser.address" label="Address" />
-            <q-select v-model="editableUser.zone" label="Zone" :options="zones" required />
+            <q-input v-model="userData.username" label="Username" required />
+            <q-input v-model="userData.email" label="Email" type="email" required />
+            <q-input v-model="userData.firstName" label="First Name" />
+            <q-input v-model="userData.lastName" label="Last Name" />
+            <q-input v-model="userData.phone" label="Phone" />
+            <q-input v-model="userData.address" label="Address" />
+            <q-select v-model="userData.zone" label="Zone" :options="zones" required />
             <div class="q-mt-md row justify-end">
               <q-btn flat label="Cancel" color="grey" @click="showEditProfile = false" />
               <q-btn label="Save" color="primary" type="submit" />
@@ -214,9 +214,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import axios from 'axios'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -233,6 +234,19 @@ const userData = ref({
 
 const editableUser = reactive({ ...userData.value })
 const showEditProfile = ref(false)
+
+async function fetchData() {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await axios.get(`${process.env.api_host}/users/viewer`, {
+      headers: { Authorization: token },
+    })
+    console.log(response.data.user)
+    userData.value = response.data.user
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 const saveProfile = () => {
   Object.assign(userData.value, editableUser)
@@ -353,6 +367,10 @@ const deleteListing = (id) => {
     $q.notify({ message: 'Listing deleted', color: 'negative' })
   }
 }
+
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
