@@ -47,7 +47,8 @@ export default defineConfig((/* ctx */) => {
       // publicPath: '/',
       // analyze: true,
       env: {
-        api_host: 'http://localhost:3000',
+        // api_host: 'http://localhost:3000',
+        api_host: 'https://trade-connect-be.vercel.app',
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

@@ -1,210 +1,175 @@
 <template>
-  <q-page class="profile-page q-pa-md">
-    <q-card class="user-info-card q-mb-md">
-      <q-card-section>
-        <div class="row items-center">
-          <q-avatar size="80px" class="q-mr-md">
-            <q-icon name="person" size="48px" />
-          </q-avatar>
-          <div>
-            <div class="text-h6">{{ userData.username || 'User' }}</div>
-            <div>{{ userData.email }}</div>
-            <div>{{ userData.address }}</div>
-          </div>
-          <q-space />
-          <q-btn flat icon="edit" @click="showEditProfile = true" label="Edit Profile" />
+  <q-page class="q-pa-md">
+    <!-- Profile Info -->
+    <q-card class="q-mb-md">
+      <q-card-section class="row items-center">
+        <q-avatar size="80px" class="q-mr-md">
+          <q-icon name="person" size="48px" />
+        </q-avatar>
+        <div>
+          <div class="text-h6">{{ userData.username }}</div>
+          <div>{{ userData.email }}</div>
+          <div>{{ userData.address }}</div>
         </div>
+        <q-space />
+        <q-btn flat icon="edit" label="Edit" @click="showEditProfile = true" />
       </q-card-section>
     </q-card>
 
-    <section class="my-listings q-mb-lg">
-      <div class="row items-center q-mb-sm">
-        <h2 class="text-h6">My Listings</h2>
-        <q-btn
-          flat
-          dense
-          label="Add New"
-          color="primary"
-          icon="add"
-          @click="showAddPostModal = true"
-        />
-      </div>
-      <div v-if="myListings.length" class="row q-col-gutter-md">
-        <div v-for="item in myListings" :key="item.id" class="col-12 col-sm-6 col-md-4">
-          <q-card class="product-card cursor-pointer">
-            <q-img :src="item.image" ratio="1" />
-            <q-card-section>
-              <div class="text-subtitle2 text-weight-medium ellipsis-2-lines">{{ item.title }}</div>
-              <div class="text-caption">₱{{ item.price.toLocaleString() }}</div>
-              <div class="q-mt-sm row justify-between">
-                <q-btn dense flat icon="edit" color="primary" @click="editListing(item)" />
-                <q-btn dense flat icon="delete" color="negative" @click="deleteListing(item.id)" />
-              </div>
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
-      <div v-else>
-        <p>You have no listings yet.</p>
-      </div>
-    </section>
+    <!-- My Products -->
+    <div class="row items-center q-mb-sm">
+      <h2 class="text-h6">My Products</h2>
+      <q-space />
+      <q-btn flat dense icon="add" label="Add New" color="primary" @click="openProductDialog()" />
+    </div>
 
-    <section class="favorites q-mb-lg">
-      <h2 class="text-h6 q-mb-sm">Favorites</h2>
-      <div v-if="favorites.length" class="row q-col-gutter-md">
-        <div v-for="item in favorites" :key="item.id" class="col-12 col-sm-6 col-md-4">
-          <q-card class="product-card cursor-pointer" @click="navigateToProduct(item.id)">
-            <q-img :src="item.image" ratio="1" />
-            <q-card-section>
-              <div class="text-subtitle2 ellipsis-2-lines">{{ item.title }}</div>
-              <div class="text-caption">₱{{ item.price.toLocaleString() }}</div>
-            </q-card-section>
-          </q-card>
-        </div>
+    <div v-if="products.length" class="row q-col-gutter-md q-mb-lg">
+      <div v-for="product in products" :key="product._id" class="col-12 col-sm-6 col-md-4">
+        <q-card>
+          <q-img :src="product.file" ratio="1" />
+          <q-card-section>
+            <div class="text-subtitle2 ellipsis-2-lines">{{ product.name }}</div>
+            <div class="text-caption">₱{{ product.price.toLocaleString() }}</div>
+            <div class="q-mt-sm row justify-between">
+              <q-btn dense flat icon="edit" color="primary" @click="openProductDialog(product)" />
+              <q-btn
+                dense
+                flat
+                icon="delete"
+                color="negative"
+                @click="deleteProduct(product._id)"
+              />
+            </div>
+          </q-card-section>
+        </q-card>
       </div>
-      <div v-else>
-        <p>No favorite items yet.</p>
-      </div>
-    </section>
+    </div>
+    <div v-else><p>No products yet.</p></div>
 
-    <section class="purchase-history q-mb-lg">
-      <h2 class="text-h6 q-mb-sm">Purchase History</h2>
-      <div v-if="purchaseHistory.length" class="row q-col-gutter-md">
-        <div v-for="item in purchaseHistory" :key="item.id" class="col-12 col-sm-6 col-md-4">
-          <q-card>
-            <q-img :src="item.image" ratio="1" />
-            <q-card-section>
-              <div class="text-subtitle2">{{ item.title }}</div>
-              <div class="text-caption">₱{{ item.price.toLocaleString() }}</div>
-              <div>Status: {{ item.status }}</div>
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
-      <div v-else>
-        <p>No purchases yet.</p>
-      </div>
-    </section>
-
-    <q-dialog v-model="showEditProfile" persistent>
-      <q-card style="max-width: 400px; width: 100%">
-        <q-card-section>
-          <div class="text-h6">Edit Profile</div>
+    <!-- Product Dialog -->
+    <q-dialog v-model="showProductDialog">
+      <q-card style="max-width: 500px; width: 100%">
+        <q-card-section class="text-h6">
+          {{ editingProduct ? 'Edit Product' : 'Add Product' }}
         </q-card-section>
         <q-card-section>
-          <q-form @submit.prevent="saveProfile">
-            <q-input v-model="userData.username" label="Username" required />
-            <q-input v-model="userData.email" label="Email" type="email" required />
-            <q-input v-model="userData.firstName" label="First Name" />
-            <q-input v-model="userData.lastName" label="Last Name" />
-            <q-input v-model="userData.phone" label="Phone" />
-            <q-input v-model="userData.address" label="Address" />
-            <q-select v-model="userData.zone" label="Zone" :options="zones" required />
+          <q-form @submit.prevent="submitProduct">
+            <q-input v-model="productForm.name" label="Name" required />
+            <q-input
+              v-model="productForm.description"
+              label="Description"
+              type="textarea"
+              required
+            />
+            <q-input v-model.number="productForm.price" label="Price" type="number" required />
+            <q-input
+              v-model.number="productForm.quantity"
+              label="Quantity"
+              type="number"
+              required
+            />
+            <q-input v-model="productForm.category" label="Category" required />
+            <q-file
+              filled
+              bottom-slots
+              label="Select Image"
+              counter
+              v-model="productFile"
+              @change="onFileSelected"
+            />
+            <q-img
+              v-if="productForm.file"
+              :src="productForm.file"
+              class="q-mt-sm"
+              style="max-height: 200px; border: 1px solid #ddd"
+            />
+            <q-toggle v-model="productForm.isForSale" label="For Sale" />
+            <q-toggle v-model="productForm.isForTrade" label="For Trade" />
             <div class="q-mt-md row justify-end">
-              <q-btn flat label="Cancel" color="grey" @click="showEditProfile = false" />
-              <q-btn label="Save" color="primary" type="submit" />
+              <q-btn flat label="Cancel" color="grey" @click="closeProductDialog" />
+              <q-btn label="Save" type="submit" color="primary" />
             </div>
           </q-form>
         </q-card-section>
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="showAddPostModal" persistent>
-      <q-card style="max-width: 500px; width: 100%">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Create Listing</div>
-          <q-space />
-          <q-btn icon="close" flat round dense @click="showAddPostModal = false" />
-        </q-card-section>
+    <!-- Orders for My Products -->
+    <div class="row items-center q-mb-sm">
+      <h2 class="text-h6">Orders for My Products</h2>
+    </div>
 
-        <q-card-section class="q-pt-none">
-          <q-form @submit.prevent="handlePostSubmit" class="q-gutter-md">
-            <q-input
-              filled
-              v-model="postForm.description"
-              placeholder="Item description *"
-              type="textarea"
-              lazy-rules
-              :rules="[(val) => !!val || 'Description is required']"
-            />
-
-            <div>
-              <div class="text-caption q-mb-sm">Categories *</div>
-              <div class="row q-gutter-sm">
-                <q-btn
-                  v-for="category in categories"
-                  :key="category.value"
-                  :label="category.label"
-                  :color="postForm.category === category.value ? 'primary' : 'black'"
-                  @click="postForm.category = category.value"
-                  outline
-                  rounded
-                />
-              </div>
-              <q-input
-                v-model="postForm.category"
-                filled
-                style="display: none"
-                lazy-rules
-                :rules="[(val) => !!val || 'Category is required']"
-              />
+    <div v-if="sellerOrders.length" class="row q-col-gutter-md q-mb-lg">
+      <div v-for="order in sellerOrders" :key="order._id" class="col-12">
+        <q-card>
+          <q-card-section>
+            <div class="text-subtitle2">
+              Order by: {{ order.user.username }} ({{ order.user.email }})
             </div>
-
-            <q-input
-              filled
-              v-model="postForm.quantity"
-              label="Quantity *"
-              type="number"
-              min="1"
-              lazy-rules
-              :rules="[(val) => !!val || 'Quantity is required']"
-            />
-
-            <div>
-              <div class="text-caption q-mb-sm">Upload Images (Minimum 3) *</div>
-              <div class="row q-gutter-sm">
-                <q-uploader
-                  style="width: 100%"
-                  multiple
-                  accept=".jpg, image/*"
-                  max-files="3"
-                  max-total-size="10000000"
-                  @added="handleImageUpload"
-                  @removed="handleImageRemove"
-                  label="Drag and drop or browse files"
-                />
+            <div class="q-mt-sm">
+              <div v-for="item in order.items" :key="item.product._id">
+                <div>{{ item.product.name }} — Quantity: {{ item.quantity }}</div>
               </div>
             </div>
-
-            <div class="q-mt-md">
-              <q-toggle
-                v-model="postForm.isForSale"
-                label="Sell this item"
-                left-label
-                color="primary"
-              />
-
-              <q-input
-                v-if="postForm.isForSale"
+            <div class="q-mt-sm">
+              <q-select
                 filled
-                v-model="postForm.price"
-                placeholder="Price (₱) *"
-                type="number"
-                min="1"
-                lazy-rules
-                :rules="[(val) => !!val || 'Price is required']"
-                class="q-mt-sm"
+                dense
+                v-model="order.status"
+                :options="['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']"
+                label="Status"
+                @update:model-value="(val) => updateOrderStatus(order._id, val)"
               />
             </div>
+            <div class="text-caption q-mt-xs">Total: ₱{{ order.total.toLocaleString() }}</div>
+            <div class="text-caption">
+              Ordered At: {{ new Date(order.createdAt).toLocaleString() }}
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+    <div v-else><p>No orders yet for your products.</p></div>
 
-            <div>
-              <q-btn
-                label="Post Item"
-                type="submit"
-                color="primary"
-                class="full-width"
-                icon="upload"
-              />
+    <!-- My Cart -->
+    <div class="row items-center q-mb-sm">
+      <h2 class="text-h6">My Cart</h2>
+    </div>
+
+    <div v-if="cart.length" class="row q-col-gutter-md q-mb-lg">
+      <div v-for="item in cart" :key="item._id" class="col-12 col-sm-6 col-md-4">
+        <q-card>
+          <q-img :src="item.product?.file || 'https://via.placeholder.com/150'" ratio="1" />
+          <q-card-section>
+            <div class="text-subtitle2 ellipsis-2-lines">
+              {{ item.product?.name || 'Unknown Product' }}
+            </div>
+            <div class="text-caption">
+              ₱{{ item.product?.price ? item.product.price.toLocaleString() : 'N/A' }}
+            </div>
+            <div class="text-caption">Quantity: {{ item.quantity }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <!-- Place Order Button -->
+      <div class="col-12 row justify-end q-mt-md">
+        <q-btn color="primary" label="Place Order" @click="placeOrder" />
+      </div>
+    </div>
+    <div v-else><p>Your cart is empty.</p></div>
+
+    <!-- Edit Profile Dialog -->
+    <q-dialog v-model="showEditProfile">
+      <q-card style="max-width: 400px; width: 100%">
+        <q-card-section class="text-h6">Edit Profile</q-card-section>
+        <q-card-section>
+          <q-form @submit.prevent="saveProfile">
+            <q-input v-model="userData.username" label="Username" required />
+            <q-input v-model="userData.email" label="Email" type="email" required />
+            <q-input v-model="userData.address" label="Address" />
+            <div class="q-mt-md row justify-end">
+              <q-btn flat label="Cancel" color="grey" @click="showEditProfile = false" />
+              <q-btn label="Save" color="primary" type="submit" />
             </div>
           </q-form>
         </q-card-section>
@@ -214,174 +179,249 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
 import { useQuasar } from 'quasar'
 import axios from 'axios'
+import { uploadToCloud } from 'src/components/cloudinaryUtility'
 
 const $q = useQuasar()
-const router = useRouter()
+const userData = ref({ username: '', email: '', address: '' })
+const products = ref([])
+const cart = ref([])
 
-const userData = ref({
-  username: 'kitkai',
-  email: 'maricarcaratao11@gmail.com',
-  firstName: 'kai',
-  lastName: 'caratao',
-  phone: '09171234567',
-  address: 'bulihan',
-  zone: 'zone3',
+const showEditProfile = ref(false)
+const showProductDialog = ref(false)
+const editingProduct = ref(null)
+const productFile = ref(null)
+
+import { onBeforeRouteLeave } from 'vue-router'
+
+onBeforeRouteLeave((to, from, next) => {
+  // Optional: Close dialogs or reset any modals
+  showEditProfile.value = false
+  showProductDialog.value = false
+
+  // Optional: Reset forms
+  editingProduct.value = null
+  productFile.value = null
+
+  next()
 })
 
-const editableUser = reactive({ ...userData.value })
-const showEditProfile = ref(false)
+const productForm = ref({
+  name: '',
+  description: '',
+  price: null,
+  quantity: 1,
+  category: '',
+  file: '',
+  isForSale: true,
+  isForTrade: false,
+})
 
-async function fetchData() {
+const sellerOrders = ref([])
+
+async function fetchSellerOrders() {
   try {
     const token = localStorage.getItem('authToken')
-    const response = await axios.get(`${process.env.api_host}/users/viewer`, {
+    const res = await axios.get(`${process.env.api_host}/orders/seller`, {
       headers: { Authorization: token },
     })
-    console.log(response.data.user)
-    userData.value = response.data.user
+    sellerOrders.value = res.data.orders
   } catch (err) {
     console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to fetch seller orders.' })
   }
 }
 
-const saveProfile = () => {
-  Object.assign(userData.value, editableUser)
-  showEditProfile.value = false
-  $q.notify({
-    message: 'Profile updated successfully!',
-    color: 'positive',
-    icon: 'check_circle',
-  })
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const token = localStorage.getItem('authToken')
+    await axios.put(
+      `${process.env.api_host}/orders/${orderId}`,
+      { status: newStatus },
+      {
+        headers: { Authorization: token },
+      },
+    )
+    $q.notify({ type: 'positive', message: 'Order updated.' })
+    fetchSellerOrders()
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Update failed.' })
+  }
 }
 
-const myListings = ref([
-  {
-    id: 1,
-    title: 'Vintage Chair',
-    price: 0,
-    image: 'https://cdn.quasar.dev/img/.jpg',
-  },
-  {
-    id: 2,
-    title: 'Used Bicycle',
-    price: 0,
-    image: 'https://cdn.quasar.dev/img/.jpg',
-  },
-])
+let isMounted = true
 
-const favorites = ref([
-  {
-    id: 11,
-    title: 'Old Camera',
-    price: 0,
-    image: 'https://cdn.quasar.dev/img/.jpg',
-  },
-])
-
-const purchaseHistory = ref([
-  {
-    id: 21,
-    title: 'Gaming Mouse',
-    price: 0,
-    image: 'https://cdn.quasar.dev/img/.jpg',
-    status: 'Delivered',
-  },
-])
-
-const zones = [
-  { label: 'Zone 1', value: 'zone1' },
-  { label: 'Zone 2', value: 'zone2' },
-  { label: 'Zone 3', value: 'zone3' },
-  { label: 'Zone 4', value: 'zone4' },
-  { label: 'Zone 5', value: 'zone5' },
-  { label: 'Zone 6', value: 'zone6' },
-  { label: 'Zone 7', value: 'zone7' },
-  { label: 'Zone 8', value: 'zone8' },
-  { label: 'Zone 9', value: 'zone9' },
-  { label: 'Zone 10', value: 'zone10' },
-  { label: 'Zone 11', value: 'zone11' },
-]
-
-const navigateToProduct = (id) => {
-  router.push(`/product/${id}`)
-}
-
-const showAddPostModal = ref(false)
-const categories = [
-  { label: 'Fashion & Apparel', value: 'fashion' },
-  { label: 'Electronics', value: 'electronics' },
-  { label: 'Food & Beverages', value: 'food' },
-  { label: 'DIY & Hardware', value: 'diy' },
-  { label: 'Health & Beauty', value: 'health' },
-]
-
-const postForm = reactive({
-  description: '',
-  category: '',
-  quantity: 1,
-  images: [],
-  isForSale: false,
-  price: null,
-})
-
-const handleImageUpload = (files) => {
-  postForm.images.push(...files)
-}
-
-const handleImageRemove = (file) => {
-  postForm.images = postForm.images.filter((f) => f !== file)
-}
-
-const handlePostSubmit = () => {
-  if (!postForm.description || !postForm.category || postForm.images.length < 3) {
-    $q.notify({
-      type: 'negative',
-      message: 'Please complete all required fields with at least 3 images.',
+async function fetchUserAndProducts() {
+  try {
+    const token = localStorage.getItem('authToken')
+    const userResponse = await axios.get(`${process.env.api_host}/users/viewer`, {
+      headers: { Authorization: token },
     })
-    return
+    if (!isMounted) return
+    userData.value = userResponse.data.user
+
+    const productResponse = await axios.get(`${process.env.api_host}/products`, {
+      headers: { Authorization: token },
+    })
+    if (!isMounted) return
+    products.value = productResponse.data.filter((p) => p.seller === userData.value._id)
+
+    const cartResponse = await axios.get(`${process.env.api_host}/cart`, {
+      headers: { Authorization: token },
+    })
+    if (!isMounted) return
+    cart.value = cartResponse.data.cart
+  } catch (err) {
+    if (isMounted) {
+      console.error(err)
+    }
   }
-
-  $q.notify({ type: 'positive', message: 'Listing posted!' })
-  showAddPostModal.value = false
-
-  postForm.description = ''
-  postForm.category = ''
-  postForm.quantity = 1
-  postForm.images = []
-  postForm.isForSale = false
-  postForm.price = null
 }
 
-const editListing = (item) => {
-  $q.notify({ message: `Edit listing for ${item.title} not implemented`, color: 'warning' })
+async function placeOrder() {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await axios.post(
+      `${process.env.api_host}/orders`,
+      {},
+      {
+        headers: { Authorization: token },
+      },
+    )
+    $q.notify({ type: 'positive', message: 'Order placed successfully!' })
+    cart.value = []
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to place order.' })
+  }
 }
 
-const deleteListing = (id) => {
-  const idx = myListings.value.findIndex((i) => i.id === id)
-  if (idx !== -1) {
-    myListings.value.splice(idx, 1)
-    $q.notify({ message: 'Listing deleted', color: 'negative' })
+function openProductDialog(product = null) {
+  if (product) {
+    editingProduct.value = product
+    Object.assign(productForm.value, { ...product })
+    productFile.value = null
+  } else {
+    editingProduct.value = null
+    Object.assign(productForm.value, {
+      name: '',
+      description: '',
+      price: null,
+      quantity: 1,
+      category: '',
+      file: '',
+      isForSale: true,
+      isForTrade: false,
+    })
+    productFile.value = null
+  }
+  showProductDialog.value = true
+}
+
+function closeProductDialog() {
+  showProductDialog.value = false
+  editingProduct.value = null
+  productFile.value = null
+}
+
+async function onFileSelected() {
+  const file = productFile.value
+
+  const url = await uploadToCloud(file)
+  if (url) productForm.value.file = url
+}
+
+async function submitProduct() {
+  try {
+    const token = localStorage.getItem('authToken')
+
+    if (productFile.value) {
+      const uploadedUrl = await uploadToCloud(productFile.value)
+      if (!uploadedUrl) {
+        $q.notify({ type: 'negative', message: 'Image upload failed.' })
+        return
+      }
+      productForm.value.file = uploadedUrl
+    }
+
+    const payload = { ...productForm.value, seller: userData.value._id }
+
+    if (editingProduct.value) {
+      await axios.put(`${process.env.api_host}/products/${editingProduct.value._id}`, payload, {
+        headers: { Authorization: token },
+      })
+      $q.notify({ type: 'positive', message: 'Product updated!' })
+    } else {
+      await axios.post(`${process.env.api_host}/products`, payload, {
+        headers: { Authorization: token },
+      })
+      $q.notify({ type: 'positive', message: 'Product created!' })
+    }
+
+    await fetchUserAndProducts()
+    closeProductDialog()
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to save product.' })
+  }
+}
+
+async function deleteProduct(id) {
+  try {
+    const token = localStorage.getItem('authToken')
+    await axios.delete(`${process.env.api_host}/products/${id}`, {
+      headers: { Authorization: token },
+    })
+    $q.notify({ type: 'negative', message: 'Product deleted' })
+    fetchUserAndProducts()
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Delete failed' })
+  }
+}
+
+async function saveProfile() {
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await axios.put(
+      `${process.env.api_host}/users/update`,
+      {
+        username: userData.value.username,
+        email: userData.value.email,
+        address: userData.value.address,
+      },
+      {
+        headers: { Authorization: token },
+      },
+    )
+    userData.value = res.data.user
+    showEditProfile.value = false
+    $q.notify({ type: 'positive', message: 'Profile updated successfully!' })
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to update profile.' })
   }
 }
 
 onMounted(() => {
-  fetchData()
+  fetchUserAndProducts()
+  fetchSellerOrders()
+})
+
+onBeforeUnmount(() => {
+  isMounted = false
 })
 </script>
 
 <style scoped>
-.product-card {
-  cursor: pointer;
-}
 .ellipsis-2-lines {
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
 }
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 </style>

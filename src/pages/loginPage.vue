@@ -54,7 +54,7 @@
 
           <div class="remember-forgot q-mb-md">
             <q-checkbox v-model="rememberMe" label="Remember me" />
-            <q-btn flat label="Forgot password?" class="q-pa-none" to="/forgot-password" />
+            <!-- <q-btn flat label="Forgot password?" class="q-pa-none" to="/forgot-password" /> -->
           </div>
 
           <q-btn
@@ -72,7 +72,8 @@
         </q-form>
 
         <div class="login-link">
-          Don't have an account? <q-btn flat label="Sign Up" class="q-pa-none" />
+          Don't have an account?
+          <q-btn flat label="Sign Up" @click="router.push('/blank/signup')" class="q-pa-none" />
         </div>
       </div>
     </div>
