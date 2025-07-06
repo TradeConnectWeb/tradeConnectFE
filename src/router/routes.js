@@ -20,6 +20,8 @@ const routes = [
       { path: 'community', component: () => import('pages/CommunityPage.vue') },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') },
       { path: 'help-center', component: () => import('pages/HelpCenterPage.vue') },
+      { path: 'verification', component: () => import('pages/verificationPage.vue') },
+
     ],
   },
 

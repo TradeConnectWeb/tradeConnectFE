@@ -88,8 +88,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const router = useRouter()
 const leftDrawerOpen = ref(false)
@@ -123,6 +124,17 @@ const logout = () => {
   localStorage.removeItem('authToken')
   router.push('/blank/login')
 }
+
+async function checkAuth() {
+  const token = localStorage.getItem('authToken')
+  if (!token) {
+    router.push('/blank/login')
+  }
+}
+
+onMounted(async () => {
+  checkAuth()
+})
 </script>
 
 <style scoped>

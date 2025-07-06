@@ -54,7 +54,6 @@
 
           <div class="remember-forgot q-mb-md">
             <q-checkbox v-model="rememberMe" label="Remember me" />
-            <!-- <q-btn flat label="Forgot password?" class="q-pa-none" to="/forgot-password" /> -->
           </div>
 
           <q-btn
@@ -118,31 +117,32 @@ const handleLogin = async () => {
 
     const token = response.data.token
     localStorage.setItem('authToken', 'bearer ' + token)
-    // Redirect or change UI (optional)
-    // router.push('/dashboard')
+
+    // Redirect based on role
+    if (email.value === 'admin@admin.com') {
+      router.push('/verification')
+    } else {
+      router.push('/')
+    }
   } catch (err) {
     const msg = err.response?.data?.message || 'Login failed'
     $q.notify({ message: msg, color: 'negative' })
   } finally {
     loading.value = false
-    checkAuth()
-  }
-}
-
-async function checkAuth() {
-  const token = localStorage.getItem('authToken')
-  if (token) {
-    router.push('/')
   }
 }
 
 onMounted(() => {
-  checkAuth()
+  const token = localStorage.getItem('authToken')
+  if (token) {
+    router.push('/') // Optional: auto redirect if already logged in
+  }
 })
 </script>
 
 <style lang="scss" scoped>
-/* Existing styles stay unchanged */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
 .container {
   display: flex;
   max-width: 800px;
@@ -254,5 +254,4 @@ onMounted(() => {
     padding: 30px;
   }
 }
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 </style>
